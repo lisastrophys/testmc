@@ -15,9 +15,13 @@ Computah, make my code 3D. And it did. Additionally, it reads an opacity file of
 ```
 
 Possible modes are: 
+
 `imagert` --- MC source function + ray-tracing (default mode), output: image_raytrace_inu, where inu are wavelength indices of the grid in dustkappa.inp
+
 Inside is a 2D array of intensity in erg s-1 Hz-1 cm-2 with observer in -inf on x-axis, rows are along y-coordinate and columns are along z-coordinate. 
+
 `imagemc` --- image directly from MC, output is the same
+
 `mctherm` --- MC source function but output is dust_temperature3d.out with 3D array of temperature in Kelvin and is written in XY-blocks, rows are along x-coordinate, columns are along y-coordinate and the matrix repeats nz times.
 
 There are two additional keywords to be used in the terminal: `inu` restricts which wavelengths to output (by default it outputs all) and `nphot` sets the amount of photon packages per wavelength(!).
