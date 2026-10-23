@@ -462,8 +462,8 @@ subroutine parse_command_line()
 !usage: ./mc3d [imagert | imagemc | mctherm | imagetherm] [inu i1 i2 ...] [nphot N]
 !   imagert - n_case = 1, source function method + ray-traced images (default)
 !   imagemc - n_case = 2, monte carlo picture method
-!   mctherm - n_case = 3, dust temperature + imagert (scattered+thermal emission)
-!   imagetherm - n_case = 4, dust temperature
+!   mctherm - n_case = 3, dust temperature
+!   imagetherm - n_case = 4, dust temperature + imagert (scattered+thermal emission)
 !   inu     - wavelength indices to write out (default: all)
 !   nphot   - number of photon packets per wavelength, e.g. 100000 or 1e5 (default: value in the code)
 implicit none
@@ -663,11 +663,11 @@ elemental function B(nu, T)
 implicit none
 real(DP), intent(in) :: nu, T ![nu] = Hz, [T] = K, [B] = erg/(cm^2 s Hz sr)
 real(DP) :: B, xx
-xx = hP*nu/kB/T
 if (T.le.0) then
     B=0
     return
 endif
+xx = hP*nu/kB/T
 if (xx.gt.700) then !avoid overflow of exp, B is negligible there
     B = 0
 else
