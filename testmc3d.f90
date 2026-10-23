@@ -459,10 +459,11 @@ enddo
 end subroutine
 
 subroutine parse_command_line()
-!usage: ./mc3d [imagert | imagemc | mctherm] [inu i1 i2 ...] [nphot N]
+!usage: ./mc3d [imagert | imagemc | mctherm | imagetherm] [inu i1 i2 ...] [nphot N]
 !   imagert - n_case = 1, source function method + ray-traced images (default)
 !   imagemc - n_case = 2, monte carlo picture method
-!   mctherm - n_case = 3, dust temperature
+!   mctherm - n_case = 3, dust temperature + imagert (scattered+thermal emission)
+!   imagetherm - n_case = 4, dust temperature
 !   inu     - wavelength indices to write out (default: all)
 !   nphot   - number of photon packets per wavelength, e.g. 100000 or 1e5 (default: value in the code)
 implicit none
@@ -530,6 +531,7 @@ select case(n_case)
 case(1); print*, 'run mode: imagert (source function method + ray tracing)'
 case(2); print*, 'run mode: imagemc (monte carlo picture method)'
 case(3); print*, 'run mode: mctherm (dust temperature)'
+case(4); print*, 'run mode: imagetherm (dust temperature + imagert (scattered+thermal emission))'
 end select
 print*, 'photon packets per wavelength: ', n_phot
 end subroutine
@@ -538,10 +540,11 @@ subroutine usage(msg)
 implicit none
 character(*), intent(in) :: msg
 if (len_trim(msg).gt.0) print*, trim(msg)
-print*, 'usage: ./mc3d [imagert | imagemc | mctherm] [inu i1 i2 ...] [nphot N]'
+print*, 'usage: ./mc3d [imagert | imagemc | mctherm | imagetherm] [inu i1 i2 ...] [nphot N]'
 print*, '   imagert - source function method + ray-traced images (default)'
 print*, '   imagemc - monte carlo picture method'
 print*, '   mctherm - dust temperature'
+print*, '   imagetherm - dust temperature + imagert (scattered+thermal emission)'
 print*, '   inu     - wavelength indices to write out (default: all)'
 print*, '   nphot   - photon packets per wavelength, e.g. 100000 or 1e5'
 stop
@@ -661,6 +664,10 @@ implicit none
 real(DP), intent(in) :: nu, T ![nu] = Hz, [T] = K, [B] = erg/(cm^2 s Hz sr)
 real(DP) :: B, xx
 xx = hP*nu/kB/T
+if (T.le.0) then
+    B=0
+    return
+endif
 if (xx.gt.700) then !avoid overflow of exp, B is negligible there
     B = 0
 else
