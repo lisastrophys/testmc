@@ -157,6 +157,41 @@ case(3)
         enddo
     enddo
     close(410)
+case(4)
+    !mean intensity J from the same packets as in case 1 (no albedo factor: dust_temp needs J itself)
+    source_func = 0
+    !$omp parallel do schedule(dynamic, 100) private(inu)
+    do ip=1, n_tot
+        inu = int(mod(ip-1, int(nlam,8))) + 1
+        call monte_carlo_sca(inu)
+        if (mod(ip, n_report).eq.0) print*, ip, ' photons finished'
+    enddo
+    !$omp end parallel do
+    allocate(temp(n_cell, n_cell, n_cell))
+    call dust_temp()
+    print*, 'dust temperature min/max [K]: ', minval(temp, rho.gt.0), maxval(temp, rho.gt.0)
+    !full 3D cube: blocks of constant k (k = 1..N), inside each block rows j = N..1, columns i = 1..N
+    open(410, file='dust_temperature3d.out')
+    do k=1, n_cell
+        do j=n_cell, 1, -1
+            write(410, '(*(es12.3))') (temp(i,j,k), i=1, n_cell)
+        enddo
+    enddo
+    close(410)
+    do inu=1, nlam
+        source_func(:,:,:,inu) = albedo(inu)*source_func(:,:,:,inu) + (1-albedo(inu))*B(nu(inu), temp)
+    enddo
+    call integrate_transfer()
+    !image seen from -x: rows k = N..1, columns j = 1..N, flux per pixel [erg s-1 cm-2 Hz-1]
+    do inu=1, nlam
+        if (.not.out_lam(inu)) cycle
+        write(filename, '(a, i4.4, a)') 'image_raytrace_therm_', inu, '.out'
+        open(405, file=filename)
+        do k=n_cell, 1, -1
+            write(405, '(*(es12.3))') (image_rt(j, k, inu), j=1, n_cell)
+        enddo
+        close(405)
+    enddo
 end select
 
 contains
@@ -444,11 +479,12 @@ nargs = command_argument_count()
 do iarg=1, nargs
     call get_command_argument(iarg, arg)
     select case(trim(arg))
-    case('imagert', 'imagemc', 'mctherm')
-        if (n_case.ne.0) call usage('only one of imagert, imagemc, mctherm can be given')
+    case('imagert', 'imagemc', 'mctherm', 'imagetherm')
+        if (n_case.ne.0) call usage('only one of imagert, imagemc, mctherm, imagetherm can be given')
         if (trim(arg).eq.'imagert') n_case = 1
         if (trim(arg).eq.'imagemc') n_case = 2
         if (trim(arg).eq.'mctherm') n_case = 3
+        if (trim(arg).eq.'imagetherm') n_case = 4
         reading_inu = .false.
         if (reading_nphot) call usage('no number given after "nphot"')
     case('inu')

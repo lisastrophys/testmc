@@ -8,7 +8,7 @@ A ready to go 2D Monte Carlo RT for making monochromatic isotropically scattered
 
 ## testmc3d.f90
 
-Computah, make my code 3D. And it did. Additionally, it reads an opacity file of the same structure like RADMC-3D (only one dust species, scattering only isotropic and always named `dustkappa.inp` in the folder where you run the code) and is parallelised with OpenMP (takes all threads it can get but you can limit it through environment variables). Absorption is now included so energy is removed from packets and they are handled using survival biasing and Russian roulette methods. The images is still just scattered light, however. The output of source function was replaced by temperature in a dedicated mode. The dust is, however, not self-heated so the temperature will be underestimated in dense regions. The code can be compiled by running `make`. `make debug` will compile with runtime checks and `make clean` will remove the executable. Once compiled it can be called with:
+Computah, make my code 3D. And it did. Additionally, it reads an opacity file of the same structure like RADMC-3D (only one dust species, scattering only isotropic and always named `dustkappa.inp` in the folder where you run the code) and is parallelised with OpenMP (takes all threads it can get but you can limit it through environment variables). Absorption is now included so energy is removed from packets and they are handled using survival biasing and Russian roulette methods. The images can be just scattered light or scattered light+dust thermal emission depending on the mode. The output of source function was replaced by temperature in a dedicated modes. The dust is, however, not self-heated so the temperature will be underestimated in dense regions. The code can be compiled by running `make`. `make debug` will compile with runtime checks and `make clean` will remove the executable. Once compiled it can be called with:
 
 ```bash
 ./mc3d imagert inu 3 2 5 nphot 1e4
@@ -16,13 +16,15 @@ Computah, make my code 3D. And it did. Additionally, it reads an opacity file of
 
 Possible modes are: 
 
-`imagert` --- MC source function + ray-tracing (default mode), output: image_raytrace_*.out, where * are wavelength indices of the grid in dustkappa.inp
+`imagert` --- MC scattering source function + ray-tracing (default mode), output: image_raytrace_*.out, where * are wavelength indices of the grid in dustkappa.inp
 
 Inside is a 2D array of flux/pixel in erg s-1 Hz-1 cm-2 with observer at -150 pc on x-axis, rows are along z-coordinate and columns are along y-coordinate. 
 
 `imagemc` --- image directly from MC, output is the same but called image_montecarlo_*.out
 
 `mctherm` --- MC source function but output is dust_temperature3d.out with 3D array of temperature in Kelvin and is written in XY-blocks, rows are along y-coordinate, columns are along x-coordinate and the matrix repeats nz times.
+
+`imagetherm` --- MC source function (scattering + dust thermal contribution) + ray-tracing. Output is both dust_temperature3d.out and image_raytrace_therm_*.out similar to how it is defined above.
 
 There are two additional keywords to be used in the terminal: `inu` restricts which wavelengths to output (by default it outputs all) and `nphot` sets the amount of photon packages per wavelength(!).
 
